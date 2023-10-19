@@ -1,10 +1,12 @@
 import java.sql.*;
+import java.util.Calendar;
 
-public class Main {
+public class Main { /*
 
     static final String DB_URL = "jdbc:mysql://localhost/jdbc_connection?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
     static final String USERNAME = "root";
     static final String PASSWORD = "a1b2c3d4e5";
+
 
     public static void main(String[] args) {
         try {
@@ -151,11 +153,103 @@ public class Main {
         int count =  stmt.executeUpdate();
         System.out.println("Records affected by UPDATE:" + count);
         stmt.close();
+    }*/
+
+    //This commented part is the homework from LAB 3, and below are tasks we did in the lab
+    static final String DB_URL = "jdbc:mysql://localhost/db_lab3_tasks?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
+    static final String USERNAME = "root";
+    static final String PASSWORD = "a1b2c3d4e5";
+
+    public static void main(String[] args) {
+        try {
+            Connection connection = DriverManager.getConnection(DB_URL, USERNAME, PASSWORD);
+            //executeRead(connection);
+            //executeInsert(connection);
+            //executeUpdate(connection);
+            executeDelete(connection);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    public static void executeRead(Connection connection) throws SQLException {
+        System.out.println("Executing READ Statement");
 
+        Statement stmt = connection.createStatement();
+        //every function is also sql query that has to have this part!
+        //for the read function we use this method of the class Statement, Statement stmt = connection.createStatement();
+        //However, for the dynamic operations (which are almost all others) class Prepared Statement will be used with its own different structure
+
+        String sql = "SELECT id, first_name, last_name, birth_date, email FROM employees;";
+
+        //every read statement should also have this so that the data is returned!
+        ResultSet resultSet = stmt.executeQuery(sql);
+
+        while(resultSet.next()){
+            //names of table column go under " "
+            int id = resultSet.getInt("id");
+            String first_name = resultSet.getString("first_name");
+            String last_name = resultSet.getString("last_name");
+            Date birth_date = resultSet.getDate("birth_date");
+            String email = resultSet.getString("email");
+            System.out.println(id + " " + last_name + " " + first_name + " " + email + " " + birth_date);
+        }
+    }
+
+    public static void executeInsert(Connection connection) throws SQLException {
+        System.out.println("Executing INSERT statement");
+        String insert = "INSERT INTO employees (id, first_name, last_name, birth_date, email, created) VALUES (?, ?, ?, ?, ?, ?);";
+        PreparedStatement statement = connection.prepareStatement(insert);
+        statement.setInt(1,3);
+        statement.setString(2, "Ajla");
+        statement.setString(3, "Korman");
+
+        //remember this logic when a new date is being added to the table
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, 2002);
+        calendar.set(Calendar.MONTH, 10);
+        calendar.set(Calendar.DATE, 30);
+
+        Date birth_date = new Date(calendar.getTimeInMillis());
+        statement.setDate(4, birth_date);
+        statement.setString(5, "korman.ajla@gmail.com");
+        statement.setDate(6, new Date(System.currentTimeMillis()));
+
+        //This is very important with any modfiication query to have
+        int count = statement.executeUpdate();
+        System.out.println("Rows affected: " + count);
+
+        //The close method is not used with Statement class, but only with PreparedStatement class
+        //Therefore you don't have this at the end of the SQL query that has Statement class in it, but only PreparedStatement
+       //with every method that uses class PreparedStatement should at the end have close() method
+        statement.close();
+    }
+
+    //Every method should have this SQLException
+    public static void executeUpdate(Connection connection) throws SQLException{
+        System.out.println("Executing UPDATE statement");
+        String update = " UPDATE employees SET email = ? WHERE id = ? ";
+        PreparedStatement stmt = connection.prepareStatement(update);
+        stmt.setString(1, "ajla.korman@gmail.com");
+        stmt.setInt(2,3 );
+        int count = stmt.executeUpdate();
+        System.out.println("Rows affected: " + count);
+        stmt.close();
+    }
+
+    public static void executeDelete(Connection connection) throws SQLException{
+        System.out.println("Executing DELETE statement");
+        String delete = " DELETE FROM employees WHERE id = ?";
+        PreparedStatement stmt = connection.prepareStatement(delete);
+        stmt.setInt(1, 2);
+        int count = stmt.executeUpdate();
+        System.out.println("Rows affected: " + count);
+        stmt.close();
+    }
 
 }
+
+
 
 
 
